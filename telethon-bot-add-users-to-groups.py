@@ -10,16 +10,19 @@ import time
 import random
 import re
 
-
 api_id = 000000        # YOUR API_ID
 api_hash = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'        # YOUR API_HASH
 phone = '+34000000000'        # YOUR PHONE NUMBER, INCLUDING COUNTRY CODE
+password = ''
 client = TelegramClient(phone, api_id, api_hash)
 
 client.connect()
 if not client.is_user_authorized():
     client.send_code_request(phone)
-    client.sign_in(phone, input('Enter the code: '))
+    try:
+      client.sign_in(phone, input('Enter the code: '))
+    except:
+      client.sign_in(password=password)
 
 def add_users_to_group():
     input_file = sys.argv[1]
@@ -106,7 +109,7 @@ def list_users_in_group():
     last_date = None
     chunk_size = 200
     groups=[]
-    
+
     result = client(GetDialogsRequest(
                 offset_date=last_date,
                 offset_id=0,
@@ -115,7 +118,7 @@ def list_users_in_group():
                 hash = 0
             ))
     chats.extend(result.chats)
-    
+
     for chat in chats:
         try:
             print(chat)
@@ -123,22 +126,22 @@ def list_users_in_group():
             # if chat.megagroup== True:
         except:
             continue
-    
+
     print('Choose a group to scrape members from:')
     i=0
     for g in groups:
         print(str(i) + '- ' + g.title)
         i+=1
-    
+
     g_index = input("Enter a Number: ")
     target_group=groups[int(g_index)]
 
     print('\n\nGrupo elegido:\t' + groups[int(g_index)].title)
-    
+
     print('Fetching Members...')
     all_participants = []
     all_participants = client.get_participants(target_group, aggressive=True)
-    
+
     print('Saving In file...')
     with open("members-" + re.sub("-+","-",re.sub("[^a-zA-Z]","-",str.lower(target_group.title))) + ".csv","w",encoding='UTF-8') as f:
         writer = csv.writer(f,delimiter=",",lineterminator="\n")
@@ -157,7 +160,7 @@ def list_users_in_group():
             else:
                 last_name= ""
             name= (first_name + ' ' + last_name).strip()
-            writer.writerow([username,user.id,user.access_hash,name,target_group.title, target_group.id])      
+            writer.writerow([username,user.id,user.access_hash,name,target_group.title, target_group.id])
     print('Members scraped successfully.')
 
 def printCSV():
